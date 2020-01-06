@@ -4,48 +4,61 @@ import ReactDOM from 'react-dom';
 
 class BookDashboard extends React.Component {
 	state = {
-		books: [
-			{
-				id: 1,
-				title: 'A simple book',
-				author: 'Jude Ben',
-				description: `Lorem ipsum dolor sit amet, consectetur
-					adipiscing elit, sed do eiusmod tempor incididunt
-					ut labore et dolore magna aliqua. Ut enim ad minim
-					veniam, quis nostrud`
-			},
-			{
-				id: 2,
-				title: 'A book of secrets',
-				author: 'James John',
-				description: `Sed ut perspiciatis unde omnis iste natus
-					error sit voluptatem accusantium doloremque laudantium,
-					totam rem aperiam, eaque ipsa quae ab illo inventore
-					veritatis et quasi architecto beatae vitae dicta sunt
-					explicabo.`
-			}
-		]
+		books: []
+	}
+
+	componentDidMount() {
+		fetch('http://localhost:8000/api/books/')
+			.then(response => response.json())
+			.then(data => {
+				this.setState({books: data});
+			})
 	}
 
 	createNewBook = (book) => {
-		book.id = Math.floor(Math.random() * 1000);
-		this.setState({books: this.state.books.concat([book])});
+		fetch('http://localhost:8000/api/books/', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(book),
+		}).then(response => response.json())
+		.then(book => {
+			this.setState({books: this.state.books.concat([book])});
+		});
 	}
 
 	updateBook = (newBook) => {
-		const newBooks = this.state.books.map(book => {
-			if(book.id === newBook.id) {
-				return Object.assign({}, newBook)
-			} else {
-				return book;
-			}
+		fetch(`http://localhost:8000/api/books/${newBook.id}/`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(newBook),
+		}).then(response => response.json())
+		.then(newBook => {
+			const newBooks = this.state.books.map(book => {
+				if(book.id === newBook.id) {
+					return Object.assign({}, newBook)
+				} else {
+					return book;
+				}
+			});
+			this.setState({books: newBooks});
 		});
-
-		this.setState({books: newBooks});
 	}
 
 	deleteBook = (bookId) => {
-		this.setState({books: this.state.books.filter(book => book.id !== bookId)})
+		fetch(`http://localhost:8000/api/books/${bookId}/`, {
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		})
+		.then(() => {
+			this.setState({books: this.state.books.filter(book => book.id !== bookId)})
+		});
+
 	}
 	render() {
 		return (
